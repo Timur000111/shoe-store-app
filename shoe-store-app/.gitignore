@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# База данных (генерируется при первом запуске)
+shoe_store.db
+
+# Виртуальное окружение
+venv/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Скомпилированные бинарники и временные файлы
+dist/
+build/
+*.egg-info/
+
+# Изображения товаров (загружаются пользователем)
+assets/products/
