@@ -15,7 +15,6 @@ COLOR_LOGOUT_BTN = "#FF6B6B"
 ROLE_LABELS = {"admin": "Администратор", "manager": "Менеджер",
                "client": "Клиент", "guest": "Гость"}
 
-# Колонки таблицы товаров
 COLUMNS = ("id", "name", "category", "manufacturer", "supplier",
            "price", "final_price", "unit", "stock", "discount")
 COL_LABELS = {
@@ -32,8 +31,6 @@ COL_WIDTHS = {
 
 
 class ProductsFrame(tk.Frame):
-    """Экран со списком товаров. Функциональность зависит от роли пользователя."""
-
     def __init__(self, parent, app, user: dict):
         super().__init__(parent, bg=COLOR_BG)
         self.app = app
@@ -41,28 +38,20 @@ class ProductsFrame(tk.Frame):
         self.role = user.get("role", "guest")
         self.db = Database()
 
-        # Переменные фильтрации / поиска
         self._search_var = tk.StringVar()
         self._supplier_var = tk.StringVar(value="Все поставщики")
         self._search_var.trace_add("write", lambda *_: self._apply_filters())
         self._supplier_var.trace_add("write", lambda *_: self._apply_filters())
 
-        # Направление сортировки по остатку
         self._sort_ascending = True
         self._sort_by_stock = False
 
-        # Ссылка на открытое окно редактирования (только одно одновременно)
         self._edit_window = None
 
-        # Кэш миниатюр изображений (чтобы GC не удалил)
         self._thumb_cache: dict = {}
 
         self._build_ui()
         self._load_products()
-
-    # ------------------------------------------------------------------
-    # Построение интерфейса
-    # ------------------------------------------------------------------
 
     def _build_ui(self):
         self.app.title("Список товаров — Магазин обуви")
@@ -78,25 +67,21 @@ class ProductsFrame(tk.Frame):
         self._build_legend()
 
     def _build_top_bar(self):
-        """Верхняя полоса с логотипом, именем пользователя и кнопкой выхода."""
         bar = tk.Frame(self, bg=COLOR_SECONDARY, pady=8)
         bar.pack(fill=tk.X)
 
         tk.Label(bar, text="🥿  Магазин обуви", font=(FONT, 14, "bold"),
                  bg=COLOR_SECONDARY).pack(side=tk.LEFT, padx=12)
 
-        # Кнопка выхода
         tk.Button(bar, text="Выход", font=(FONT, 10), bg=COLOR_LOGOUT_BTN,
                   fg="white", cursor="hand2", command=self._on_logout).pack(side=tk.RIGHT, padx=10)
 
-        # ФИО и роль пользователя (правый верхний угол, как требует задание)
         role_text = ROLE_LABELS.get(self.role, self.role)
         full_name = self.user.get("full_name", "Гость")
         tk.Label(bar, text=f"{full_name}  |  {role_text}",
                  font=(FONT, 11), bg=COLOR_SECONDARY).pack(side=tk.RIGHT, padx=10)
 
     def _build_toolbar(self):
-        """Панель поиска, фильтра и сортировки (менеджер и администратор)."""
         bar = tk.Frame(self, bg=COLOR_BG, pady=6)
         bar.pack(fill=tk.X, padx=12)
 
@@ -118,7 +103,6 @@ class ProductsFrame(tk.Frame):
                   command=self._reset_sort).pack(side=tk.LEFT, padx=6)
 
     def _build_admin_bar(self):
-        """Панель действий администратора."""
         bar = tk.Frame(self, bg=COLOR_BG, pady=4)
         bar.pack(fill=tk.X, padx=12)
 
@@ -130,11 +114,9 @@ class ProductsFrame(tk.Frame):
                   command=self._delete_selected).pack(side=tk.LEFT, padx=10)
 
     def _build_table(self):
-        """Основная таблица с товарами."""
         wrapper = tk.Frame(self)
         wrapper.pack(fill=tk.BOTH, expand=True, padx=12, pady=6)
 
-        # Изображение в нулевой (дерево-) колонке
         self.tree = ttk.Treeview(
             wrapper, columns=COLUMNS, show="tree headings", selectmode="browse"
         )
@@ -145,7 +127,6 @@ class ProductsFrame(tk.Frame):
             self.tree.heading(col, text=COL_LABELS[col])
             self.tree.column(col, width=COL_WIDTHS[col], anchor="center")
 
-        # Цветовые теги строк
         self.tree.tag_configure("discount_high", background=COLOR_DISCOUNT_HIGH, foreground="white")
         self.tree.tag_configure("no_stock", background=COLOR_NO_STOCK)
         self.tree.tag_configure("normal", background=COLOR_BG)
@@ -174,19 +155,14 @@ class ProductsFrame(tk.Frame):
         tk.Label(bar, text="■", fg=COLOR_NO_STOCK, bg=COLOR_BG, font=(FONT, 13)).pack(side=tk.LEFT)
         tk.Label(bar, text=" Нет на складе", bg=COLOR_BG, font=(FONT, 10)).pack(side=tk.LEFT)
 
-    # ------------------------------------------------------------------
-    # Загрузка и отображение данных
-    # ------------------------------------------------------------------
 
     def _load_products(self):
-        """Загружает все товары из БД и обновляет таблицу."""
         self._all_products = [dict(row) for row in self.db.get_all_products()]
         self._thumb_cache.clear()
         self._preload_thumbnails()
         self._apply_filters()
 
     def _preload_thumbnails(self):
-        """Предзагружает миниатюры изображений для всех товаров."""
         try:
             from PIL import Image, ImageTk
             placeholder = "assets/picture.png"
@@ -203,13 +179,11 @@ class ProductsFrame(tk.Frame):
             pass
 
     def _apply_filters(self):
-        """Применяет поиск, фильтр по поставщику и сортировку."""
         products = list(self._all_products)
 
         if self.role in ("manager", "admin"):
             search = self._search_var.get().strip().lower()
             if search:
-                # Поиск по всем текстовым полям одновременно
                 products = [
                     p for p in products
                     if any(
@@ -238,7 +212,6 @@ class ProductsFrame(tk.Frame):
             discount = p.get("discount", 0.0)
             stock = p.get("stock_quantity", 0)
 
-            # Если есть скидка — показываем итоговую цену
             if discount > 0:
                 final = price * (1 - discount / 100)
                 price_str = f"{price:.2f} р."
@@ -254,7 +227,7 @@ class ProductsFrame(tk.Frame):
                 p.get("unit", ""), stock, f"{discount:.0f}%",
             )
 
-            # Определяем цветовой тег строки
+            
             if discount > 15:
                 tag = "discount_high"
             elif stock == 0:
@@ -268,10 +241,6 @@ class ProductsFrame(tk.Frame):
                 image=thumbnail if thumbnail else "",
                 values=values, tags=(tag,),
             )
-
-    # ------------------------------------------------------------------
-    # Обработчики событий
-    # ------------------------------------------------------------------
 
     def _set_sort(self, ascending: bool):
         self._sort_by_stock = True
@@ -329,7 +298,6 @@ class ProductsFrame(tk.Frame):
         if not product:
             return
 
-        # Нельзя удалить товар, присутствующий в заказе
         if self.db.is_product_in_orders(product_id):
             messagebox.showerror(
                 "Удаление невозможно",
@@ -339,7 +307,6 @@ class ProductsFrame(tk.Frame):
             )
             return
 
-        # Предупреждение о необратимом действии
         confirmed = messagebox.askyesno(
             "Подтверждение удаления",
             f"Вы собираетесь безвозвратно удалить товар:\n\n"
@@ -350,7 +317,6 @@ class ProductsFrame(tk.Frame):
         if not confirmed:
             return
 
-        # Удаляем изображение товара с диска
         img_path = product["image_path"]
         if img_path and os.path.exists(img_path):
             try:
