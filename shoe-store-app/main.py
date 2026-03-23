@@ -17,7 +17,6 @@ class App(tk.Tk):
         self.configure(bg=COLOR_BG)
         self.current_frame = None
 
-        # Иконка приложения (файл поместить в assets/icon.ico)
         try:
             self.iconbitmap("assets/icon.ico")
         except Exception:
@@ -26,9 +25,6 @@ class App(tk.Tk):
         initialize_database()
         self.show_login()
 
-    # ------------------------------------------------------------------
-    # Навигация между экранами
-    # ------------------------------------------------------------------
 
     def show_login(self):
         """Переходит на экран авторизации."""
