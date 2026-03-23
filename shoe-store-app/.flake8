@@ -4,6 +4,5 @@ exclude =
     .git,
     __pycache__,
     *.egg-info
-# Игнорируем E501 только для строк с SQL-запросами (не применяется, т.к. max-line-length достаточно)
 per-file-ignores =
     setup_db.py: E501
