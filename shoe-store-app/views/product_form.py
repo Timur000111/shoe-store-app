@@ -18,22 +18,21 @@ IMG_MAX_H = 200
 
 
 class ProductFormWindow(tk.Toplevel):
-    """Окно добавления или редактирования товара (открывается только одно)."""
 
     def __init__(self, parent, db: Database, product_id, on_save):
         super().__init__(parent)
         self.db = db
         self.product_id = product_id
         self.on_save = on_save
-        self._new_image_path = None    # путь, выбранный в текущей сессии
-        self._old_image_path = None    # старый путь (для удаления при замене)
+        self._new_image_path = None    
+        self._old_image_path = None   
 
         title = "Редактирование товара" if product_id else "Добавление товара"
         self.title(title)
         self.geometry("720x680")
         self.configure(bg=COLOR_BG)
         self.resizable(False, True)
-        self.grab_set()    # блокирует главное окно пока форма открыта
+        self.grab_set()    
 
         os.makedirs(IMAGES_DIR, exist_ok=True)
         self._build_ui()
@@ -41,12 +40,7 @@ class ProductFormWindow(tk.Toplevel):
         if product_id:
             self._fill_from_db()
 
-    # ------------------------------------------------------------------
-    # Построение интерфейса
-    # ------------------------------------------------------------------
-
     def _build_ui(self):
-        # Скроллируемый холст
         canvas = tk.Canvas(self, bg=COLOR_BG, highlightthickness=0)
         scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
         self._form = tk.Frame(canvas, bg=COLOR_BG)
@@ -63,7 +57,7 @@ class ProductFormWindow(tk.Toplevel):
         title_text = "Редактирование товара" if self.product_id else "Добавление товара"
         tk.Label(self._form, text=title_text, font=(FONT, 16, "bold"), bg=COLOR_BG).pack(pady=(16, 10))
 
-        # ID (только при редактировании, доступен только для чтения)
+        # ID 
         if self.product_id:
             self._add_row_entry("ID товара:", tk.StringVar(value=str(self.product_id)),
                                 readonly=True, store_as="_id_var")
@@ -75,22 +69,22 @@ class ProductFormWindow(tk.Toplevel):
         self._name_var = tk.StringVar()
         self._add_row_entry("Наименование: *", self._name_var)
 
-        # Категория (выпадающий список)
+        # Категория 
         cats = self.db.get_categories()
         self._cat_map = {c["name"]: c["id"] for c in cats}
         self._cat_var = tk.StringVar()
         self._add_row_combo("Категория: *", self._cat_var, list(self._cat_map.keys()))
 
-        # Описание (многострочное поле)
+        # Описание 
         self._add_row_textbox("Описание:")
 
-        # Производитель (выпадающий список)
+        # Производитель 
         mans = self.db.get_manufacturers()
         self._man_map = {m["name"]: m["id"] for m in mans}
         self._man_var = tk.StringVar()
         self._add_row_combo("Производитель: *", self._man_var, list(self._man_map.keys()))
 
-        # Поставщик (редактируемое поле с автодополнением)
+        # Поставщик
         sup_names = [s["name"] for s in self.db.get_suppliers()]
         self._sup_var = tk.StringVar()
         self._add_row_combo("Поставщик: *", self._sup_var, sup_names, readonly=False)
@@ -118,7 +112,6 @@ class ProductFormWindow(tk.Toplevel):
                   bg=COLOR_BTN_CANCEL, fg="white", width=14, cursor="hand2",
                   command=self.destroy).pack(side=tk.LEFT, padx=10)
 
-    # Вспомогательные методы построения строк формы --------------------
 
     def _add_row_entry(self, label: str, var: tk.StringVar,
                        readonly: bool = False, store_as: str = None):
@@ -163,10 +156,6 @@ class ProductFormWindow(tk.Toplevel):
                   command=self._choose_image).pack(side=tk.LEFT)
         self._refresh_image_preview(None)
 
-    # ------------------------------------------------------------------
-    # Заполнение формы данными из БД (редактирование)
-    # ------------------------------------------------------------------
-
     def _fill_from_db(self):
         product = self.db.get_product_by_id(self.product_id)
         if not product:
@@ -181,7 +170,6 @@ class ProductFormWindow(tk.Toplevel):
         self._stock_var.set(str(product["stock_quantity"]))
         self._discount_var.set(str(product["discount"]))
 
-        # Устанавливаем значения выпадающих списков по id
         for name, cid in self._cat_map.items():
             if cid == product["category_id"]:
                 self._cat_var.set(name)
@@ -191,7 +179,6 @@ class ProductFormWindow(tk.Toplevel):
                 self._man_var.set(name)
                 break
 
-        # Поставщик — ищем по id
         suppliers = self.db.get_suppliers()
         for s in suppliers:
             if s["id"] == product["supplier_id"]:
@@ -202,9 +189,6 @@ class ProductFormWindow(tk.Toplevel):
         self._new_image_path = product["image_path"]
         self._refresh_image_preview(product["image_path"])
 
-    # ------------------------------------------------------------------
-    # Работа с изображением
-    # ------------------------------------------------------------------
 
     def _choose_image(self):
         path = filedialog.askopenfilename(
@@ -223,7 +207,6 @@ class ProductFormWindow(tk.Toplevel):
             self._new_image_path = dest
             self._refresh_image_preview(dest)
         except ImportError:
-            # PIL не установлен — просто копируем файл без масштабирования
             dest = os.path.join(IMAGES_DIR, os.path.basename(path))
             shutil.copy2(path, dest)
             self._new_image_path = dest
@@ -232,7 +215,6 @@ class ProductFormWindow(tk.Toplevel):
             messagebox.showerror("Ошибка загрузки", f"Не удалось загрузить изображение:\n{exc}")
 
     def _refresh_image_preview(self, image_path):
-        """Обновляет миниатюру в форме."""
         try:
             from PIL import Image, ImageTk
             path = image_path if (image_path and os.path.exists(image_path)) else PLACEHOLDER
@@ -243,9 +225,6 @@ class ProductFormWindow(tk.Toplevel):
         except Exception:
             self._img_label.configure(image="", text="[нет фото]", font=(FONT, 9))
 
-    # ------------------------------------------------------------------
-    # Валидация и сохранение
-    # ------------------------------------------------------------------
 
     def _validate(self) -> list:
         """Возвращает список ошибок. Пустой список — форма валидна."""
@@ -311,7 +290,6 @@ class ProductFormWindow(tk.Toplevel):
         image_path = self._new_image_path
 
         if self.product_id:
-            # При замене изображения удаляем старый файл
             if self._old_image_path and self._old_image_path != image_path:
                 if os.path.exists(self._old_image_path):
                     try:
