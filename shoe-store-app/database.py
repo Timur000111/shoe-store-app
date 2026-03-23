@@ -5,7 +5,6 @@ DB_PATH = "shoe_store.db"
 
 
 class Database:
-    """Единственный экземпляр подключения к SQLite."""
 
     _instance = None
 
@@ -15,9 +14,6 @@ class Database:
             cls._instance._conn = None
         return cls._instance
 
-    # ------------------------------------------------------------------
-    # Подключение
-    # ------------------------------------------------------------------
 
     def get_connection(self) -> sqlite3.Connection:
         """Возвращает активное соединение, создавая его при необходимости."""
@@ -27,9 +23,6 @@ class Database:
             self._conn.execute("PRAGMA foreign_keys = ON")
         return self._conn
 
-    # ------------------------------------------------------------------
-    # Пользователи
-    # ------------------------------------------------------------------
 
     def get_user_by_credentials(self, login: str, password: str):
         """Возвращает запись пользователя или None при неверных данных."""
@@ -42,9 +35,6 @@ class Database:
         )
         return cursor.fetchone()
 
-    # ------------------------------------------------------------------
-    # Справочники
-    # ------------------------------------------------------------------
 
     def get_categories(self):
         cursor = self.get_connection().execute("SELECT id, name FROM categories ORDER BY name")
@@ -68,9 +58,6 @@ class Database:
         conn.commit()
         return cursor.lastrowid
 
-    # ------------------------------------------------------------------
-    # Товары
-    # ------------------------------------------------------------------
 
     def get_all_products(self):
         """Возвращает все товары с раскрытыми внешними ключами."""
