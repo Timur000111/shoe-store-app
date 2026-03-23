@@ -20,11 +20,9 @@ class LoginFrame(tk.Frame):
         self._build_ui()
 
     def _build_ui(self):
-        # Центральный контейнер
         center = tk.Frame(self, bg=COLOR_BG, bd=1, relief=tk.FLAT)
         center.place(relx=0.5, rely=0.5, anchor="center")
 
-        # Логотип компании (файл assets/logo.png должен быть в папке приложения)
         try:
             from PIL import Image, ImageTk
             logo_img = Image.open("assets/logo.png").resize((220, 88))
