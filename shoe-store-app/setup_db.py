@@ -17,7 +17,6 @@ def initialize_database():
 
     conn = sqlite3.connect(DB_PATH)
     try:
-        # Проверяем наличие ключевой таблицы — если она есть, БД уже инициализирована
         tables = conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='products'"
         ).fetchone()
@@ -47,7 +46,6 @@ def _create_placeholder_image():
         draw.text((150, 100), "Нет фото", fill="#666666", anchor="mm")
         img.save(PLACEHOLDER_PATH)
     except ImportError:
-        # PIL не установлен — создаём минимальный PNG вручную
         _write_minimal_png(PLACEHOLDER_PATH)
 
 
